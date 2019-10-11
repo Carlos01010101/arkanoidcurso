@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Arkanoid</title>
+		<meta charset="utf-8">
+		<script type="text/javascript">
+		const movimientoRaquetaTeclado = 10;
+		const anchoZona = 759;
+		const altoZona = 550;
+		const anchoLadrillo = 69;
+		const altoLadrillo = 20;
+		const variacionX = 1;//centro
+		const variacionY = -1;//centro
+		const variacionYpildora = 2;
+		diametroPelota = 15;
+		anchoRaqueta = 100;
+		altoRaqueta = 20;
+		posXpelota = ((anchoZona/2)-diametroPelota/2);
+		posYpelota = (altoZona - (altoRaqueta+5) - diametroPelota - 2);
+		posXRaqueta = ((anchoZona/2)-anchoRaqueta/2);
+		posYRaqueta = ((altoZona - altoRaqueta-5));
+		ladrillos = new Array();
+		puntuaciones = [10,20,30];
+		pildorasSRC = ["./pildora1.gif","./pildora2.gif","./pildora3.gif"];
+		pildoras = new Array();
+		arraylinkLadrillos = 	["./1.gif" , "./2.gif", "./3.gif", "./4.gif", "./5.gif",  "./6.gif", "./7.gif",
+											"./8.gif", "./9.gif", "./10.gif"];
+
+		// CLASE PELOTA
+					function Pelota( posX ,posY, vx ,vy , diametro )
+					{
+
+						this.x = posX;
+						this.y = posY;
+
+						this.vX = vx;
+						this.vY = vy;
+
+						this.posXanterior = this.x;
+						this.posYanterior = this.y;
+
+						this.diametro = diametro;
+
+						this.pelota = document.getElementById('pelota');
+						this.moverPelota();
+
+					}
+					// FIN CLASE PELOTA
+
+					Pelota.prototype.moverPelota = function()
+					{
+						//guardo posiciones anteriores para comprobar direccion de la pelota
+						this.posXanterior = this.x;
+						this.posYanterior = this.y;
+						//muevo la pelota .
+						this.pelota.style.top = this.y +"px";
+						this.pelota.style.left = this.x +"px";
+					}
+					//moviento Pelota
+					Pelota.prototype.comprobarColisiones = function()
+					{
+
+						this.x += this.vX;
+						this.y += this.vY;
+
+						this.colisionRaqueta();
+						this.colisionLadrillo();
+						this.colisionBordes();
+						this.moverPelota();
+
+					}
+					//colision con los bordes de la zona de juego
+					Pelota.prototype.colisionBordes = function()
+					{
+						//colision con la parte izquierda
+						if( this.x <= 0 ){
+							this.vX = -this.vX;
+						}
+						//colision con la parte superior
+						else if( this.y <= 0 ){
+							this.vY = -this.vY;
+						}
+						//colision con la parte derecha
+						else if(  this.x + this.diametro >= anchoZona ){
+							this.vX = -this.vX ;
+						}
+						//colision con la parte inferior
+						else if( this.y + this.diametro >= altoZona ){
+								principal.manejadorVidas();
+								principal.iniciarPartida = false;
+								clearInterval(principal.intervalo);
+								principal.iniciarposPelotayRaqueta();
+						}
+					}
+					Pelota.prototype.colisionRaqueta = function ()
+					{
+
+							if ((this.y >= principal.raqueta.y - this.diametro) &&(this.x >= principal.raqueta.x )
+									&& (this.x <= principal.raqueta.x + (principal.raqueta.ancho)))
+							{
+									var tamPorcionRaqueta = principal.raqueta.ancho /5 ;
+									if(this.x >= principal.raqueta.x && this.x < principal.raqueta.x + tamPorcionRaqueta)
+									{
+										if (this.posXanterior > this.x)
+										{
+											this.vX = -1.25;
+										}
+										else {
+											this.vX = 1.25;
+										}
+										this.vY = -this.vY;
+
+									}
+									else if (this.x >= principal.raqueta.x + tamPorcionRaqueta && this.x < principal.raqueta.x + tamPorcionRaqueta*2)
+									{
+										if (this.posXanterior > this.x)
+										{
+											this.vX = -1.10;
+										}
+										else {
+											this.vX = 1.10;
+										}
+										this.vY = -this.vY;
+									}
+									else if (this.x >= principal.raqueta.x + tamPorcionRaqueta*2 && this.x < principal.raqueta.x + tamPorcionRaqueta*3)
+									{
+										if (this.posXanterior > this.x)
+										{
+											this.vX = -1;
+										}
+										else {
+											this.vX = 1;
+										}
+										this.vY = -this.vY;
+									}
+									else if (this.x >= principal.raqueta.x + tamPorcionRaqueta*3 && this.x < principal.raqueta.x + tamPorcionRaqueta*4)
+									{
+										if (this.posXanterior > this.x)
+										{
+											this.vX = -1.10;
+										}
+										else {
+											this.vX = 1.10;
+										}
+										this.vY = -this.vY;
+									}
+									else if (this.x >= principal.raqueta.x + tamPorcionRaqueta*4 && this.x <= principal.raqueta.x + tamPorcionRaqueta*5)
+									{
+										if (this.posXanterior > this.x)
+										{
+											this.vX = -1.25;
+										}
+										else {
+											this.vX = 1.25;
+										}
+										this.vY = -this.vY;
+									}
+							}
+					}
+					Pelota.prototype.colisionLadrillo = function ()
+					{
+							for (var i = 0; i < ladrillos.length && principal.iniciarPartida ; i++)
+							{
+								if(ladrillos[i].ladrillo != null)
+								{
+									//rebote inferior ladrillos
+									if(this.y <= ladrillos[i].y + altoLadrillo && this.y + this.diametro >= ladrillos[i].y + altoLadrillo && this.posYanterior > this.y)
+									{
+											if(this.x >= ladrillos[i].x )
+											{
+												if(this.x + this.diametro <= (ladrillos[i].x + anchoLadrillo))
+												{
+														 ladrillos[i].borrarLadrillo();
+														 this.vY = -this.vY;
+														 if(pildoras[i] == true){
+															 ladrillos[i].crearPildora();
+														 }
+												}
+											}
+									}
+									//rebote lateral izquierdo
+									else if(this.x + this.diametro >= ladrillos[i].x && this.x <= ladrillos[i].x && this.posXanterior < this.x)
+									{
+										if(this.y >= ladrillos[i].y )
+										{
+											if(this.y + this.diametro <= (ladrillos[i].y + altoLadrillo))
+											{
+												 ladrillos[i].borrarLadrillo();
+												this.vX = -this.vX;
+											}
+										}
+									}
+									//rebote lateral derecho
+									else if(this.x <= ladrillos[i].x + anchoLadrillo && this.x + this.diametro >= ladrillos[i].x + anchoLadrillo && this.posXanterior > this.x)
+									{
+										if(this.y >= ladrillos[i].y )
+										{
+											if(this.y + this.diametro <= (ladrillos[i].y + altoLadrillo))
+											{
+													ladrillos[i].borrarLadrillo();
+													this.vX = -this.vX;
+											}
+										}
+									}
+									//	rebote superior ladrillos
+									else if(this.y + this.diametro >= ladrillos[i].y && this.y  <= ladrillos[i].y && this.posYanterior < this.y)
+									{
+										if(this.x >= ladrillos[i].x )
+										{
+											if(this.x + this.diametro <= (ladrillos[i].x + anchoLadrillo))
+											{
+													 ladrillos[i].borrarLadrillo();
+													this.vY = -this.vY;
+											}
+										}
+									}
+								}
+							}
+					}
+
+					// CLASE RAQUETA
+					function Raqueta(posX ,posY, ancho, alto){ //Constructor de la clase raqueta
+						this.ancho = ancho;
+						this.alto = alto;
+						this.x = posX;
+						this.y = posY;
+
+						this.raqueta = document.getElementById('raqueta');
+						this.raqueta.src = "./raqueta.png"; //inserto la imagen de la raqueta.
+						this.mostrarRaqueta();
+
+					}
+					// FIN CLASE RAQUETA
+					//metodo para mostrar la raqueta.
+					Raqueta.prototype.mostrarRaqueta = function()
+					{
+						this.raqueta.style.top = this.y +"px";
+						this.raqueta.style.left = this.x +"px";
+					}
+					// Raqueta.prototype.modificaTamano = function ()
+					// {
+					// 	this.ancho = this.ancho + 5;
+					// 	this.raqueta.style.width = this.ancho + "px";
+					// 	anchoRaqueta = this.ancho;
+					//
+					// }
+					//CLASE lADRILLOS
+					function Ladrillo(ancho, alto, posx, posy, puntuacion)
+					{
+							this.ancho = ancho;
+							this.alto = alto;
+							this.x = posx;
+							this.y = posy;
+							this.puntos = puntuacion;
+							this.color = Math.round(Math.random()*9);
+							this.ladrillo = document.createElement("img");
+
+
+							this.mostrarLadrillo();
+					}
+					//FIN CLASE lADRILLOS
+					Ladrillo.prototype.mostrarLadrillo = function ()
+					{
+						this.ladrillo.src = arraylinkLadrillos[this.color];
+						this.ladrillo.width = this.ancho;
+						this.ladrillo.height = this.alto;
+						this.ladrillo.style.top = this.y +"px";
+						this.ladrillo.style.left = this.x +"px";
+						principal.Ladrillosdiv.appendChild(this.ladrillo);
+					}
+
+					Ladrillo.prototype.borrarLadrillo = function ()
+					{
+						this.ladrillo.style.visibility="hidden";
+						this.ladrillo = null;
+						principal.contador -- ;
+						principal.puntuacion = principal.puntuacion + this.puntos;
+						principal.actualizaPuntuacion();
+						if(principal.contador == 0)
+						{
+							principal.gameOver();
+						}
+					}
+					Ladrillo.prototype.crearPildora = function ()
+					{
+						this.pildora = new Pildora(this.ancho, this.alto, this.x, this.y);
+
+					}
+
+					function Pildora(ancho, alto, posx, posy )
+					{
+						this.ancho = ancho;
+						this.alto = alto;
+						this.x = posx;
+						this.y = posy;
+						this.contador = 0;
+						this.tipoPildora = Math.round(Math.random()*2);
+						this.pildora = document.createElement("img");
+						this.pildora.style.top = this.y +"px";
+						this.pildora.style.left = this.x +"px";
+						this.pildora.src = pildorasSRC[0];
+						this.pildora.width = this.ancho;
+						this.pildora.height = this.alto;
+						principal.zona.appendChild(this.pildora);
+
+						this.intervalo = setInterval((function(self) {return function() {self.moverPildora(); }})(this), 10);
+
+					}
+					Pildora.prototype.moverPildora = function ()
+					{
+							this.colisionesPildora();
+						 this.pildora.style.top = this.y + variacionYpildora + "px";
+						 this.y = this.y + variacionYpildora;
+
+					}
+					Pildora.prototype.colisionesPildora = function ()
+					{
+						if( this.y + this.alto + variacionYpildora >= altoZona )
+						{
+								principal.zona.removeChild(this.pildora);
+								clearInterval(this.intervalo);
+						}
+						if ((this.y >= principal.raqueta.y - this.alto) && (this.x >= principal.raqueta.x )
+								&& (this.x <= principal.raqueta.x + (principal.raqueta.ancho)))
+								{
+									// if(this.tipoPildora == 0)
+									// {
+									// 	principal.raqueta.modificaTamano();
+									// }
+									// else if(this.tipoPildora == 1)
+									// {
+									//
+									// }
+									// else if(this.tipoPildora == 2)
+									// {
+									//
+									// }
+								}
+
+					}
+
+
+
+
+					//clase principal
+					function Principal() {
+						this.intervalo = null; // para guardar el intervalo moviento pelota.
+						this.iniciarPartida = false;
+						//traemos los elementos necesarios para empezar la partida y creamos dos img.
+						this.zona = document.getElementById('zona');
+						this.Ladrillosdiv = document.getElementById('ladrillos');
+						this.vidas = document.getElementById('vidas');
+						this.puntos = document.getElementById('puntos');
+						this.vida = document.createElement('img');
+						this.gameover = document.createElement('img');
+						this.contadorvidas = 3;
+						this.raqueta = new Raqueta(posXRaqueta, posYRaqueta, anchoRaqueta, altoRaqueta);
+						this.pelota = new Pelota(posXpelota, posYpelota, variacionX, variacionY, diametroPelota);
+						this.contador = 0;// variable para llevar el recuento de ladrillos destruidos.
+						this.puntuacion = 0; // variable para recuento de puntos.
+					}
+					//metodo para cambiar las imagenes de las vidas.
+					Principal.prototype.manejadorVidas = function ()
+					{
+						this.contadorvidas--;
+						switch (this.contadorvidas)
+						{
+							case 2:
+									this.vida.src = "./2vidas.png";
+								break;
+							case 1:
+									this.vida.src = "./1vida.png";
+									break;
+							case 0:
+									this.vida.src = "./0vidas.png";
+									this.gameOver();
+
+									break;
+							default:
+								break;
+						}
+					}
+					Principal.prototype.actualizaPuntuacion = function ()
+					{
+						var parrafo = document.createElement("p");
+						// Crear nodo de tipo Text
+						var contenido = document.createTextNode("Score: "+ this.puntuacion);
+						// Añadir el nodo Text como hijo del nodo Element
+						parrafo.appendChild(contenido);
+
+						this.puntos.removeChild(this.puntos.firstChild);
+						// Añadir el nodo Element como hijo de la pagina
+						this.puntos.appendChild(parrafo);
+					}
+
+					//funcion para remover todos los ladrillos y mostrar imagen de game over
+					Principal.prototype.gameOver = function ()
+					{
+						for (var i = 0; i < ladrillos.length; i++)
+						{
+							ladrillos[i].ladrillo = null;
+						}
+						this.borrarImgLadrillos();
+						this.iniciarPartida = false;
+						this.gameover.src = "./gameover.png";
+						this.gameover.height = 550;
+						this.gameover.width = 759;
+						this.Ladrillosdiv.appendChild(this.gameover);
+						principal.iniciarposPelotayRaqueta();
+						this.puntos.removeChild(this.puntos.firstChild);
+					}
+
+					Principal.prototype.manejadorEventos = function (elEvento)
+					{
+						this.evento = elEvento || window.event;
+						switch (this.evento.type)
+						{
+								case "mousemove":
+
+									var x = (this.evento.clientX - this.zona.offsetLeft - anchoRaqueta/2);
+									if (x >= 0 && (x + this.raqueta.ancho) <= anchoZona && this.contadorvidas != 0)
+									{
+										this.raqueta.x = x ;
+										this.raqueta.mostrarRaqueta();
+										if (!this.iniciarPartida)
+										{
+											this.pelotasigueRaqueta();
+										}
+									}
+
+								break;
+
+								case "click":
+
+										if(this.iniciarPartida == false && this.contadorvidas != 0)
+										{
+											this.empezarPartida();
+										}
+								break;
+
+								case "keydown":
+									if(this.evento.keyCode == 39 && (this.raqueta.x + this.raqueta.ancho) <= anchoZona && this.contadorvidas != 0)
+									{
+										if (this.raqueta.x + movimientoRaquetaTeclado >= anchoZona)
+										{
+											this.raqueta.x = anchoZona - this.raqueta.ancho;
+										}
+										else
+										{
+											this.raqueta.x = this.raqueta.x + movimientoRaquetaTeclado;
+										}
+										this.raqueta.mostrarRaqueta();
+										if (!this.iniciarPartida)
+										{
+											this.pelotasigueRaqueta();
+										}
+									}
+									if(this.evento.keyCode == 37 && (this.raqueta.x) >= 0 && this.contadorvidas != 0)
+									{
+										if (this.raqueta.x - movimientoRaquetaTeclado <= 0)
+										{
+												this.raqueta.x = 0;
+										}
+										else
+										{
+											this.raqueta.x = this.raqueta.x - movimientoRaquetaTeclado;
+										}
+
+										this.raqueta.mostrarRaqueta();
+										if (!this.iniciarPartida)
+										{
+											this.pelotasigueRaqueta();
+										}
+									}
+									if(this.evento.keyCode == 113 && this.contadorvidas == 0)
+									{
+										this.iniciarPartida = false;
+										this.borrarImgLadrillos();
+										this.vidas.removeChild(this.vidas.firstChild);
+										this.iniciarposPelotayRaqueta();
+										this.cargarElementos();
+
+										clearInterval(this.intervalo);
+									}
+							break;
+							default:
+							break;
+
+						}
+					}
+					//metodo para mostrar la raqueta y la pelota en el centro al iniciar una partida.
+					Principal.prototype.iniciarposPelotayRaqueta = function ()
+					{
+							this.pelota.x = posXpelota;
+							this.pelota.y = posYpelota;
+							this.raqueta.x = posXRaqueta;
+							this.raqueta.y = posYRaqueta;
+							this.raqueta.mostrarRaqueta();
+							this.pelota.moverPelota();
+
+					}
+					Principal.prototype.empezarPartida = function ()
+					{
+							// inicio intervalo movimiento pelota
+							this.iniciarPartida = true;
+							this.intervalo = setInterval(function() { principal.pelota.comprobarColisiones(); }, 1);
+
+					}
+					Principal.prototype.pelotasigueRaqueta = function ()
+					{
+								//metodo para que la pelota siga a la raqueta mientras iniciar partida sea false.
+								this.pelota.x = (this.raqueta.x + this.raqueta.ancho/2) - this.pelota.diametro/2;
+								this.pelota.moverPelota();
+					}
+					Principal.prototype.cargarElementos = function ()
+					{
+						this.contador = 0;
+						this.contadorvidas = 3;
+						//cargamos los ladrillos.
+							var x = 0;
+							var y = 0;
+
+							for (var i = 0; i < 6 ; i++)
+							{
+								for (var j = 0; j < 11; j++)
+								{
+									var puntuacion = Math.round(Math.random()*2);
+									//guardo los objetos ladrillo
+									ladrillos.push(new Ladrillo(anchoLadrillo, altoLadrillo, x, y, puntuaciones[puntuacion]));
+									x = x + anchoLadrillo;
+									this.contador++;
+								}
+								x = 0;
+								y = y + altoLadrillo;
+							}
+							for (var i = 0; i < ladrillos.length; i++)
+							{
+								pildoras[i] = false;
+							}
+
+							//cargamos posiciones de powerUP
+							for (var i = 0; i < 20; i++)
+							{
+								pildoras[Math.round(Math.random()*ladrillos.length)] = true;
+							}
+
+						//cargar vidas y puntos.
+							this.vida.width = 120;
+							this.vida.height = 34;
+							this.vida.src = "./3vidas.png";
+							this.vidas.appendChild(this.vida);
+							var parrafo = document.createElement("p");
+							// Crear nodo de tipo Text
+							var contenido = document.createTextNode("Score: "+ this.puntuacion);
+							// Añadir el nodo Text como hijo del nodo Element
+							parrafo.appendChild(contenido);
+							// Añadir el nodo Element como hijo de la pagina
+							this.puntos.appendChild(parrafo);
+
+					}
+					//borrar los ladrillos del div.
+					Principal.prototype.borrarImgLadrillos = function ()
+					 {
+						 while(this.Ladrillosdiv.hasChildNodes())
+							{
+								this.Ladrillosdiv.removeChild(this.Ladrillosdiv.firstChild);
+							}
+					 }
+
+		window.onload = function ()
+		{
+					principal = new Principal();
+					principal.cargarElementos();
+					principal.zona.onmousemove = function (e) {principal.manejadorEventos(e)}
+					principal.zona.onclick = function (e) {principal.manejadorEventos(e)}
+					document.onkeydown = function (e) {principal.manejadorEventos(e)}
+				}
+		</script>
+		<style media="screen">
+		* {
+			margin: 0;
+			padding: 0;
+		}
+		body {
+			background-image: url(./fondoZona.jpg);
+		}
+		h3{
+			text-align: center;
+			margin: 6px;
+			color: white;
+			text-decoration: underline;
+		}
+		h4{
+			text-align: center;
+			color: orange;
+		}
+		.letra{
+			font-size: .7em;
+			font-family: cursive;
+			color: yellow;
+		}
+		#contenedor{
+			width: 80%;
+			height: 70%;
+			margin: 15px auto;
+		}
+
+		#laterales {
+
+			-webkit-box-shadow: 0px 0px 33px 5px rgba(10,21,245,1);
+			-moz-box-shadow: 0px 0px 33px 5px rgba(10,21,245,1);
+			box-shadow: 0px 0px 33px 5px rgba(10,21,245,1);
+			float: left;
+			width: 800px;
+			height: 635px;
+			background-image: url(./Ladrillos.jpg);
+			border-radius: 10px;
+		}
+
+		#zona {
+			position:relative;
+			top:21px;
+			left: 20px;
+			width: 759px;
+			height: 550px;
+			background-image: url(./fondoZona3.jpg);
+			border-radius: 5px;
+			border:1px solid black;
+		}
+		#pelota {
+				width: 15px;
+				height: 15px;
+				border: 1px solid #955;
+				background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #fdd), color-stop(100%, #500));
+				background: -webkit-linear-gradient(top,  #fdd 0%, #500 100%);
+				background: linear-gradient(to bottom,  #fdd 0%, #500 100%);
+				border-radius: 50%;
+				position: absolute;
+		}
+
+		#raqueta {
+				width: 100px;
+				height: 20px;
+
+				position: absolute;
+				border-radius: 3px;
+		}
+		#ladrillos img{
+			float: left;
+		}
+
+		#zona img{
+			position: absolute;
+		}
+
+		#puntos{
+			width: 200px;
+			height: auto;
+			position: relative;
+			left: 600px;
+			top: -10px;
+			color: white;
+			font-family: fantasy;
+			font-size: 2em;
+			font-style: oblique;
+		}
+
+		#vidas{
+			width: 200px;
+			height: auto;
+			position: relative;
+			left: 20px;
+			top: 30px;
+		}
+		#instrucciones{
+			width: 350px;
+			height: 635px;
+			float: left;
+			background-color: #3d3d3d;
+			margin-left: 10px;
+			border-radius: 10px;
+			-webkit-box-shadow: 0px 0px 33px 5px rgba(10,21,245,1);
+			-moz-box-shadow: 0px 0px 33px 5px rgba(10,21,245,1);
+			box-shadow: 0px 0px 33px 5px rgba(10,21,245,1);
+		}
+		#controlesUno{
+			margin-top: 30px;
+			margin-left: 20px;
+		}
+		#controlesDos{
+			margin-top: 10px;
+			margin-left: 40px;
+		}
+		#click{
+			margin-left: 50px;
+			padding-right: 50px;
+		}
+
+		</style>
+	</head>
+	<body>
+		<div id="contenedor">
+			<div id="laterales">
+				<div id="zona" >
+					<div id=ladrillos></div>
+					<div id="pelota"></div>
+					<img src="" id="raqueta" alt="raqueta" />
+				</div>
+				<div id= "vidas"></div>
+				<div id= "puntos"></div>
+			</div>
+			<div id="instrucciones">
+
+					<h3>INSTRUCCIONES</h3>
+					<h4>CONTROLES JUEGO</h4>
+					<div id="controlesUno">
+						<img id="flechas" src="./flechas.png" alt="teclas izquierdad y derecha">
+						<span class="letraMinuscula">&nbsp;o&nbsp;</span>
+						<img id="raton" width="50px" height="40px" src="./raton.png" alt="raton">
+						<span class="letra">&nbsp;MOVIMIENTO RAQUETA</span>
+					</div>
+					<div id="controlesDos">
+						<img id="click" width="50px" height="40px" src="./clic.png" alt="raton click izquierdo">
+						<span class="letra">&nbsp;LANZAR PELOTA</span>
+					</div>
+
+			</div>
+		</div>
+	</body>
+</html>
